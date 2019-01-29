@@ -28,6 +28,9 @@ spec:
   - port: 8080
     targetPort: 8080
     name: http
+  - port: 3306
+    targetPort: 3306
+    name: mysql
 ---
 kind: Deployment
 apiVersion: extensions/v1beta1
@@ -47,5 +50,47 @@ spec:
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
+      - name: mysql
+        image: mysql:5.6
+        env:
+          # Use secret in real usage
+        - name: MYSQL_ROOT_PASSWORD
+          value: password
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-persistent-storage2
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-persistent-storage2
+        persistentVolumeClaim:
+          claimName: mysql-pv-claim2
 ---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: mysql-pv-volume2
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pv-claim2
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
 
